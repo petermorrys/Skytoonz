@@ -1,0 +1,6 @@
+{
+  "name": "Frame Animator",
+  "description": "A highly polished, professional frame-by-frame vector animation studio with onion skinning, layered exports, custom pressure-sensitive brushes, and audio track synchronization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
