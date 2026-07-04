@@ -1,21 +1,56 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Frame Animator 🎨🎬
 
-# Run and deploy your AI Studio app
+Frame Animator is a highly polished, professional frame-by-frame vector animation studio app built with Jetpack Compose and modern Material Design 3. It provides a complete sandbox for creators to sketch, organize, and export layered vector animations with synchronized audio tracks.
 
-This contains everything you need to run your app locally.
+---
 
-View your app in AI Studio: https://ai.studio/apps/42761647-4d5b-44a1-9fa1-6c11b7cf6231
+## 🚀 Key Features
 
-## Run Locally
+*   **Pro Drawing Canvas**: Supports multi-layer vector sketching with responsive stroke rendering, custom brush styles (Pen, Pencil, Brush, Airbrush, Eraser), and dynamic pressure-sensitivity options.
+*   **Onion Skinning**: Visually guides your transitions by projecting configurable before/after frames with customizable opacity.
+*   **Timeline & Layer Management**: Full multi-frame timeline navigation (play, pause, step forward, step backward) and layer depth controls (Background, Middle, Foreground) with independent visibility toggles.
+*   **Audio Track Synchronization**: Record vocal snippets, sound effects, or import audio files to play back and animate precisely on cue.
+*   **Export Formats**: Seamlessly export your hand-drawn masterpieces to high-fidelity **Animated GIFs**, **HD Video MP4s**, or structured **Layer Vectors (JSON)**.
+*   **Cloud Synchronization**: Instantly synchronize vector coordinates and asset streams with secure cloud databases for cross-device backups.
 
-**Prerequisites:**  [Android Studio](https://developer.android.com/studio)
+---
 
+## 🛠️ Recent Fixes & Changes
 
-1. Open Android Studio
-2. Select **Open** and choose the directory containing this project
-3. Allow Android Studio to fix any incompatibilities as it imports the project.
-4. Create a file named `.env` in the project directory and set `GEMINI_API_KEY` in that file to your Gemini API key (see `.env.example` for an example)
-5. Remove this line from the app's `build.gradle.kts` file: `signingConfig = signingConfigs.getByName("debugConfig")`
-6. Run the app on an emulator or physical device
+### 1. Custom Icon Engine (`AppIcons.kt`)
+*   **The Issue**: The app previously experienced massive APK bloat and compile timeouts due to dependency on the heavy `androidx.compose.material.icons.extended` package.
+*   **The Solution**: We completely replaced the external icons library with a hand-drawn, high-performance Canvas-based custom rendering system inside `AppIcons.kt`. Icons like `ADD`, `DELETE`, `PLAY_ARROW`, `PAUSE`, `SETTINGS`, and `CREATE` are rendered directly via vector mathematical operations, slashing compilation overhead and keeping the app extremely lightweight.
+
+### 2. Runtime Integrity and Crash Capture (`MyApplication` & `CrashHandler`)
+*   **The Issue**: Potential early-lifecycle application crashes during startup can be difficult to diagnose without direct developer access to device consoles or active USB debug bridges.
+*   **The Solution**:
+    *   **Early Intervention**: Created `MyApplication` (the root application initializer) which intercepts the system lifecycle before any activity or main thread UI gets rendered.
+    *   **Early-Intercept Uncaught Exception Handler**: Built `CrashHandler.kt` to monitor all global background and UI thread crashes.
+    *   **Direct Local Filesystem Log Writing**: When a crash is intercepted, the handler outputs an ultra-detailed `crash_log.txt` file containing the timestamp, app metadata, full stack trace, hardware manufacturer, device model, and Android OS version.
+    *   **Dual-Storage Logging**: Saves to:
+        1.  **Internal Storage**: `context.filesDir/crash_log.txt` (private and secure)
+        2.  **External Android Data Directory**: `context.getExternalFilesDir(null)/crash_log.txt` (directly accessible via computer USB connection or native File Manager apps under `Android/data/com.aistudio.flipacraft.nxhkqp/files/`).
+
+---
+
+## 📂 Crash Log Retrieval
+
+To inspect or download crash logs directly from a phone or emulator:
+
+1.  **Via USB / PC File Explorer**:
+    *   Connect your device and navigate to:
+        `Internal Storage/Android/data/com.aistudio.flipacraft.nxhkqp/files/crash_log.txt`
+2.  **Via On-Device File Manager**:
+    *   Open your favorite File Manager app.
+    *   Navigate to `Android -> data -> com.aistudio.flipacraft.nxhkqp -> files -> crash_log.txt`.
+3.  **Via App Sandbox (Rooted / ADB)**:
+    *   View internal reports at:
+        `/data/data/com.aistudio.flipacraft.nxhkqp/files/crash_log.txt`
+
+---
+
+## 📐 Architecture & Technology Stack
+
+*   **Jetpack Compose**: 100% declarative modern UI, tailored around Material Design 3 guidelines with elegant dark slate color palettes (`0xFF0F172A`).
+*   **MVVM Architecture**: Separates the rich timeline, recording, and vector editing state in a lifecycle-aware `AnimationViewModel` to keep UI composables completely stateless and testable.
+*   **Kotlin Coroutines & Flow**: Drives asynchronous onion skin compositing, frame export background tasks, and seamless real-time audio playback states.

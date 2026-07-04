@@ -10,12 +10,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.CloudDone
-import androidx.compose.material.icons.outlined.CloudQueue
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -123,7 +117,7 @@ fun ProjectDashboard(
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.testTag("create_project_btn")
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "New Project")
+                    AppIcon(AppIconType.ADD, contentDescription = "New Project")
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("New Project", fontWeight = FontWeight.SemiBold)
                 }
@@ -143,9 +137,8 @@ fun ProjectDashboard(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(32.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.FolderOpen,
-                            contentDescription = null,
+                        AppIcon(
+                            icon = AppIconType.FOLDER_OPEN,
                             tint = Color(0xFFCAC4D0), // Soft grey
                             modifier = Modifier.size(64.dp)
                         )
@@ -293,9 +286,8 @@ fun ProjectItemRow(
                     .background(Color(0xFFF3EDF7)), // Pale lavender background
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Movie,
-                    contentDescription = null,
+                AppIcon(
+                    icon = AppIconType.MOVIE,
                     tint = Color(0xFF6750A4), // M3 Primary Purple
                     modifier = Modifier.size(26.dp)
                 )
@@ -324,23 +316,23 @@ fun ProjectItemRow(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Icon(Icons.Default.MusicNote, contentDescription = "Audio track", tint = Color(0xFF6750A4), modifier = Modifier.size(12.dp))
+                        AppIcon(AppIconType.MUSIC_NOTE, contentDescription = "Audio track", tint = Color(0xFF6750A4), modifier = Modifier.size(12.dp))
                         Text(project.audioTrackName, color = Color(0xFF6750A4), fontSize = 11.sp, fontWeight = FontWeight.Medium)
                     }
                 }
             }
 
             // Sync Status
-            Icon(
-                imageVector = if (project.isSynced) Icons.Outlined.CloudDone else Icons.Outlined.CloudQueue,
+            AppIcon(
+                icon = if (project.isSynced) AppIconType.CLOUD_DONE else AppIconType.CLOUD_QUEUE,
                 contentDescription = if (project.isSynced) "Synced" else "Local only",
                 tint = if (project.isSynced) Color(0xFF22C55E) else Color(0xFFCAC4D0),
                 modifier = Modifier.padding(horizontal = 4.dp)
             )
 
             IconButton(onClick = onDelete) {
-                Icon(
-                    imageVector = Icons.Outlined.Delete,
+                AppIcon(
+                    icon = AppIconType.OUTLINED_DELETE,
                     contentDescription = "Delete project",
                     tint = Color(0xFFEF4444)
                 )

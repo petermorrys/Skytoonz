@@ -9,9 +9,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -103,7 +100,7 @@ fun EditorWorkspace(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onBackToDashboard) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Dashboard", tint = Color(0xFF1D1B20))
+                        AppIcon(AppIconType.ARROW_BACK, contentDescription = "Dashboard", tint = Color(0xFF1D1B20))
                     }
                     Spacer(modifier = Modifier.width(4.dp))
                     Column {
@@ -124,25 +121,25 @@ fun EditorWorkspace(
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     // Undo
                     IconButton(onClick = { viewModel.undo() }) {
-                        Icon(Icons.Default.Undo, contentDescription = "Undo", tint = Color(0xFF1D1B20))
+                        AppIcon(AppIconType.UNDO, contentDescription = "Undo", tint = Color(0xFF1D1B20))
                     }
                     // Redo
                     IconButton(onClick = { viewModel.redo() }) {
-                        Icon(Icons.Default.Redo, contentDescription = "Redo", tint = Color(0xFF1D1B20))
+                        AppIcon(AppIconType.REDO, contentDescription = "Redo", tint = Color(0xFF1D1B20))
                     }
                     // Sync Status
                     IconButton(onClick = { viewModel.toggleCloudSync() }) {
-                        val icon = if (project?.isSynced == true) Icons.Outlined.CloudDone else Icons.Outlined.CloudQueue
+                        val iconType = if (project?.isSynced == true) AppIconType.CLOUD_DONE else AppIconType.CLOUD_QUEUE
                         val tint = if (project?.isSynced == true) Color(0xFF22C55E) else Color(0xFF1D1B20)
-                        Icon(icon, contentDescription = "Cloud Sync", tint = tint)
+                        AppIcon(iconType, contentDescription = "Cloud Sync", tint = tint)
                     }
                     // Settings Drawer Trigger
                     IconButton(onClick = { activePanel = if (activePanel == ActivePanel.SETTINGS) null else ActivePanel.SETTINGS }) {
-                        Icon(Icons.Default.Settings, contentDescription = "Canvas Settings", tint = Color(0xFF1D1B20))
+                        AppIcon(AppIconType.SETTINGS, contentDescription = "Canvas Settings", tint = Color(0xFF1D1B20))
                     }
                     // Share/Export Trigger
                     IconButton(onClick = { activePanel = if (activePanel == ActivePanel.EXPORT) null else ActivePanel.EXPORT }) {
-                        Icon(Icons.Default.Share, contentDescription = "Export Animation", tint = Color(0xFF1D1B20))
+                        AppIcon(AppIconType.SHARE, contentDescription = "Export Animation", tint = Color(0xFF1D1B20))
                     }
                 }
             }
@@ -178,15 +175,15 @@ fun EditorWorkspace(
                             CircleShape
                         )
                     ) {
-                        val icon = when (brushConfig.type) {
-                            BrushType.PEN -> Icons.Default.Brush
-                            BrushType.PENCIL -> Icons.Default.Create
-                            BrushType.BRUSH -> Icons.Default.Gesture
-                            BrushType.AIRBRUSH -> Icons.Default.Grain
-                            BrushType.ERASER -> Icons.Default.AutoFixNormal
+                        val iconType = when (brushConfig.type) {
+                            BrushType.PEN -> AppIconType.BRUSH
+                            BrushType.PENCIL -> AppIconType.CREATE
+                            BrushType.BRUSH -> AppIconType.GESTURE
+                            BrushType.AIRBRUSH -> AppIconType.GRAIN
+                            BrushType.ERASER -> AppIconType.AUTO_FIX_NORMAL
                         }
                         val tint = if (activePanel == ActivePanel.BRUSH) Color(0xFF21005D) else Color(0xFF49454F)
-                        Icon(icon, contentDescription = "Brush Type", tint = tint)
+                        AppIcon(iconType, contentDescription = "Brush Type", tint = tint)
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -200,7 +197,7 @@ fun EditorWorkspace(
                         )
                     ) {
                         val tint = if (activePanel == ActivePanel.LAYERS) Color(0xFF1D192B) else Color(0xFF49454F)
-                        Icon(Icons.Default.Layers, contentDescription = "Layers Management", tint = tint)
+                        AppIcon(AppIconType.LAYERS, contentDescription = "Layers Management", tint = tint)
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -213,9 +210,9 @@ fun EditorWorkspace(
                             CircleShape
                         )
                     ) {
-                        val icon = if (project?.audioTrackName != null) Icons.Default.MusicNote else Icons.Default.MusicVideo
+                        val iconType = if (project?.audioTrackName != null) AppIconType.MUSIC_NOTE else AppIconType.MUSIC_VIDEO
                         val tint = if (project?.audioTrackName != null) Color(0xFF21005D) else Color(0xFF49454F)
-                        Icon(icon, contentDescription = "Audio track sync", tint = tint)
+                        AppIcon(iconType, contentDescription = "Audio track sync", tint = tint)
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -243,7 +240,7 @@ fun EditorWorkspace(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Icon(Icons.Default.VolumeUp, contentDescription = "Audio track playing", tint = Color.White, modifier = Modifier.size(14.dp))
+                        AppIcon(AppIconType.VOLUME_UP, contentDescription = "Audio track playing", tint = Color.White, modifier = Modifier.size(14.dp))
                         Text(
                             text = "${project?.audioTrackName} (${(audioProgress * 100).toInt()}%)",
                             color = Color.White,
@@ -280,10 +277,10 @@ fun EditorWorkspace(
                     ) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             IconButton(onClick = { viewModel.clearActiveFrameAndLayer() }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Clear frame", tint = Color(0xFFEF4444))
+                                AppIcon(AppIconType.DELETE, contentDescription = "Clear frame", tint = Color(0xFFEF4444))
                             }
                             IconButton(onClick = { viewModel.duplicateCurrentFrame() }) {
-                                Icon(Icons.Default.ContentCopy, contentDescription = "Duplicate Frame", tint = Color(0xFF1D1B20))
+                                AppIcon(AppIconType.CONTENT_COPY, contentDescription = "Duplicate Frame", tint = Color(0xFF1D1B20))
                             }
                         }
 
@@ -293,7 +290,7 @@ fun EditorWorkspace(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             IconButton(onClick = { viewModel.prevFrame() }) {
-                                Icon(Icons.Default.SkipPrevious, contentDescription = "Prev Frame", tint = Color(0xFF1D1B20), modifier = Modifier.size(28.dp))
+                                AppIcon(AppIconType.SKIP_PREVIOUS, contentDescription = "Prev Frame", tint = Color(0xFF1D1B20), modifier = Modifier.size(28.dp))
                             }
 
                             FloatingActionButton(
@@ -305,15 +302,15 @@ fun EditorWorkspace(
                                     .size(52.dp)
                                     .testTag("play_pause_fab")
                             ) {
-                                Icon(
-                                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                AppIcon(
+                                    icon = if (isPlaying) AppIconType.PAUSE else AppIconType.PLAY_ARROW,
                                     contentDescription = if (isPlaying) "Pause" else "Play",
                                     modifier = Modifier.size(28.dp)
                                 )
                             }
 
                             IconButton(onClick = { viewModel.nextFrame() }) {
-                                Icon(Icons.Default.SkipNext, contentDescription = "Next Frame", tint = Color(0xFF1D1B20), modifier = Modifier.size(28.dp))
+                                AppIcon(AppIconType.SKIP_NEXT, contentDescription = "Next Frame", tint = Color(0xFF1D1B20), modifier = Modifier.size(28.dp))
                             }
                         }
 
@@ -324,7 +321,7 @@ fun EditorWorkspace(
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                             modifier = Modifier.testTag("add_frame_btn")
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                            AppIcon(AppIconType.ADD, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("Add", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
@@ -403,7 +400,7 @@ fun EditorWorkspace(
                         modifier = Modifier.padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(Icons.Default.CloudUpload, contentDescription = null, tint = Color(0xFF6366F1), modifier = Modifier.size(48.dp))
+                        AppIcon(AppIconType.CLOUD_UPLOAD, contentDescription = null, tint = Color(0xFF6366F1), modifier = Modifier.size(48.dp))
                         Spacer(modifier = Modifier.height(16.dp))
                         Text("Cloud Synchronization", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                         Spacer(modifier = Modifier.height(8.dp))
@@ -412,7 +409,7 @@ fun EditorWorkspace(
                             Spacer(modifier = Modifier.height(8.dp))
                             Text("Securing project vectors...", color = Color.LightGray, fontSize = 13.sp)
                         } else {
-                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF22C55E), modifier = Modifier.size(32.dp))
+                            AppIcon(AppIconType.CHECK_CIRCLE, contentDescription = null, tint = Color(0xFF22C55E), modifier = Modifier.size(32.dp))
                             Spacer(modifier = Modifier.height(8.dp))
                             Text("Synced successfully!", color = Color(0xFF22C55E), fontWeight = FontWeight.SemiBold)
                         }
@@ -442,7 +439,7 @@ fun EditorWorkspace(
                         modifier = Modifier.padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(Icons.Default.VideoLibrary, contentDescription = null, tint = Color(0xFFEC4899), modifier = Modifier.size(48.dp))
+                        AppIcon(AppIconType.VIDEO_LIBRARY, contentDescription = null, tint = Color(0xFFEC4899), modifier = Modifier.size(48.dp))
                         Spacer(modifier = Modifier.height(16.dp))
                         Text("Layered Movie Export", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                         Spacer(modifier = Modifier.height(12.dp))
@@ -454,7 +451,7 @@ fun EditorWorkspace(
                                 Text(state.taskName, color = Color.LightGray, fontSize = 13.sp, textAlign = TextAlign.Center)
                             }
                             is ExportProgress.Success -> {
-                                Icon(Icons.Default.TaskAlt, contentDescription = null, tint = Color(0xFF22C55E), modifier = Modifier.size(32.dp))
+                                AppIcon(AppIconType.TASK_ALT, contentDescription = null, tint = Color(0xFF22C55E), modifier = Modifier.size(32.dp))
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(state.message, color = Color.White, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -556,7 +553,7 @@ fun BrushPanel(
             ) {
                 Text("Brush configurations", color = Color(0xFF1D1B20), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF1D1B20))
+                    AppIcon(AppIconType.CLOSE, contentDescription = "Close", tint = Color(0xFF1D1B20))
                 }
             }
 
@@ -681,7 +678,7 @@ fun LayersPanel(
             ) {
                 Text("Layers drawer", color = Color(0xFF1D1B20), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF1D1B20))
+                    AppIcon(AppIconType.CLOSE, contentDescription = "Close", tint = Color(0xFF1D1B20))
                 }
             }
 
@@ -712,9 +709,8 @@ fun LayersPanel(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = if (isSelected) Icons.Default.Layers else Icons.Outlined.Layers,
-                                        contentDescription = null,
+                                    AppIcon(
+                                        icon = AppIconType.LAYERS,
                                         tint = if (isSelected) Color(0xFF6750A4) else Color(0xFF49454F),
                                         modifier = Modifier.size(18.dp)
                                     )
@@ -728,8 +724,8 @@ fun LayersPanel(
                                 }
 
                                 IconButton(onClick = { onToggleVisibility(layer) }) {
-                                    Icon(
-                                        imageVector = if (layer.isVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    AppIcon(
+                                        icon = if (layer.isVisible) AppIconType.VISIBILITY else AppIconType.VISIBILITY_OFF,
                                         contentDescription = "Toggle visibility",
                                         tint = if (isSelected) Color(0xFF21005D) else Color(0xFF49454F)
                                     )
@@ -826,7 +822,7 @@ fun SettingsPanel(
             ) {
                 Text("Canvas & Stylus Settings", color = Color(0xFF1D1B20), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF1D1B20))
+                    AppIcon(AppIconType.CLOSE, contentDescription = "Close", tint = Color(0xFF1D1B20))
                 }
             }
 
@@ -968,7 +964,7 @@ fun AudioPanel(
             ) {
                 Text("Audio Track Synchronization", color = Color(0xFF1D1B20), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF1D1B20))
+                    AppIcon(AppIconType.CLOSE, contentDescription = "Close", tint = Color(0xFF1D1B20))
                 }
             }
 
@@ -1009,8 +1005,8 @@ fun AudioPanel(
                             containerColor = if (isRecording) Color(0xFFEF4444) else Color(0xFF6750A4)
                         )
                     ) {
-                        Icon(
-                            imageVector = if (isRecording) Icons.Default.MicOff else Icons.Default.Mic,
+                        AppIcon(
+                            icon = if (isRecording) AppIconType.MIC_OFF else AppIconType.MIC,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )
@@ -1041,9 +1037,8 @@ fun AudioPanel(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Icon(
-                                imageVector = if (isSelected) Icons.Default.VolumeUp else Icons.Default.MusicNote,
-                                contentDescription = null,
+                            AppIcon(
+                                icon = if (isSelected) AppIconType.VOLUME_UP else AppIconType.MUSIC_NOTE,
                                 tint = if (isSelected) Color(0xFF6750A4) else Color(0xFF49454F),
                                 modifier = Modifier.size(16.dp)
                             )
@@ -1093,7 +1088,7 @@ fun ExportPanel(
             ) {
                 Text("Publish & Share Animation", color = Color(0xFF1D1B20), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF1D1B20))
+                    AppIcon(AppIconType.CLOSE, contentDescription = "Close", tint = Color(0xFF1D1B20))
                 }
             }
 
@@ -1107,7 +1102,7 @@ fun ExportPanel(
                 ExportFormatCard(
                     title = "Animated GIF",
                     desc = "Ideal for quick social posts & web loop shares",
-                    icon = Icons.Default.Gif,
+                    icon = AppIconType.GIF,
                     color = Color(0xFF6750A4),
                     onClick = { onExport("GIF") },
                     modifier = Modifier.weight(1f)
@@ -1117,7 +1112,7 @@ fun ExportPanel(
                 ExportFormatCard(
                     title = "HD Video MP4",
                     desc = "Perfect with sound tracks, high resolution",
-                    icon = Icons.Default.VideoFile,
+                    icon = AppIconType.VIDEO_FILE,
                     color = Color(0xFF6750A4),
                     onClick = { onExport("MP4 Movie") },
                     modifier = Modifier.weight(1f)
@@ -1139,7 +1134,7 @@ fun ExportPanel(
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.Code, contentDescription = null, tint = Color(0xFF6750A4), modifier = Modifier.size(28.dp))
+                    AppIcon(AppIconType.CODE, tint = Color(0xFF6750A4), modifier = Modifier.size(28.dp))
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
                         Text("Export Layer Vectors (JSON)", color = Color(0xFF1D1B20), fontWeight = FontWeight.Bold, fontSize = 14.sp)
@@ -1155,7 +1150,7 @@ fun ExportPanel(
 fun ExportFormatCard(
     title: String,
     desc: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: AppIconType,
     color: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -1181,7 +1176,7 @@ fun ExportFormatCard(
                     .background(color.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
+                AppIcon(icon, tint = color, modifier = Modifier.size(20.dp))
             }
 
             Column {
