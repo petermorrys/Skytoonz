@@ -7,7 +7,6 @@ import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.data.database.AnimationDatabase
 import com.example.data.model.DrawPathEntity
 import com.example.data.model.FrameEntity
 import com.example.data.model.LayerEntity
@@ -115,8 +114,7 @@ class AnimationViewModel(application: Application) : AndroidViewModel(applicatio
     private var audioPlayer: MediaPlayer? = null
 
     init {
-        val database = AnimationDatabase.getDatabase(application)
-        repository = AnimationRepository(database.animationDao())
+        repository = AnimationRepository()
 
         allProjects = repository.allProjects.stateIn(
             scope = viewModelScope,

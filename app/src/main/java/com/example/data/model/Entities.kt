@@ -1,13 +1,7 @@
 package com.example.data.model
 
-import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.Index
-import androidx.room.PrimaryKey
-
-@Entity(tableName = "projects")
 data class ProjectEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val id: Long = 0,
     val name: String,
     val fps: Int = 12,
     val width: Int = 1080,
@@ -18,20 +12,8 @@ data class ProjectEntity(
     val audioTrackDurationMs: Long = 0
 )
 
-@Entity(
-    tableName = "layers",
-    foreignKeys = [
-        ForeignKey(
-            entity = ProjectEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["projectId"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ],
-    indices = [Index("projectId")]
-)
 data class LayerEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val id: Long = 0,
     val projectId: Long,
     val name: String,
     val opacity: Float = 1.0f,
@@ -39,44 +21,14 @@ data class LayerEntity(
     val layerOrder: Int
 )
 
-@Entity(
-    tableName = "frames",
-    foreignKeys = [
-        ForeignKey(
-            entity = ProjectEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["projectId"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ],
-    indices = [Index("projectId")]
-)
 data class FrameEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val id: Long = 0,
     val projectId: Long,
     val sequenceIndex: Int
 )
 
-@Entity(
-    tableName = "draw_paths",
-    foreignKeys = [
-        ForeignKey(
-            entity = FrameEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["frameId"],
-            onDelete = ForeignKey.CASCADE
-        ),
-        ForeignKey(
-            entity = LayerEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["layerId"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ],
-    indices = [Index("frameId"), Index("layerId")]
-)
 data class DrawPathEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val id: Long = 0,
     val frameId: Long,
     val layerId: Long,
     val color: Int,
@@ -85,3 +37,4 @@ data class DrawPathEntity(
     val pointsData: String, // Format: "x,y,pressure;x,y,pressure;..."
     val timestamp: Long = System.currentTimeMillis()
 )
+
