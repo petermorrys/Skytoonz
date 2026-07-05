@@ -31,6 +31,19 @@ Frame Animator is a highly polished, professional frame-by-frame vector animatio
         1.  **Internal Storage**: `context.filesDir/crash_log.txt` (private and secure)
         2.  **External Android Data Directory**: `context.getExternalFilesDir(null)/crash_log.txt` (directly accessible via computer USB connection or native File Manager apps under `Android/data/com.aistudio.flipacraft.nxhkqp/files/`).
 
+### 3. "Art Animator" UI Upgrade & Custom Canvas Engine
+*   **The Upgrade**: Redesigned the main dashboard with a gorgeous, high-fidelity tabbed interface featuring **Projects** and **Clips** lists, an interactive floating navigation bar, and bento-styled cards.
+*   **Custom Background Engine**: Creators can now select from 14 background canvas textures and presets on project creation, including:
+    *   *Solid colors*: White, Black, Gray, Cream, Blue, Green, Pink.
+    *   *Interactive textures*: Ruled school paper, grid lines, dot grids, sketch patterns, brown Kraft cardboard, and blackboard Chalk green.
+    *   All background swatches feature miniature vector representations drawn live in the creation dialog to preview their look before building!
+*   **Widescreen & Cinematic Canvas Presets**: Selectable aspect ratios including:
+    *   *YouTube (16:9 Landscape)*: 1920 x 1080, perfect for widescreen cartoons.
+    *   *Instagram (1:1 Square)*: 1080 x 1080, optimized for social media posts.
+    *   *TikTok / Shorts (9:16 Vertical)*: 1080 x 1920, tailored for mobile viewers.
+    *   *Standard (4:3 Retro)*: 1440 x 1080, classic traditional cartoon canvas.
+*   **Preloaded "Cat Jump" Demo**: Pre-populates the workspace on launch with a gorgeous 3-frame jumping cat vector animation. Users can tap it, hit play, and inspect real vector paths immediately!
+
 ---
 
 ## 📂 Crash Log Retrieval

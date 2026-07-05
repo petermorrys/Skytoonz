@@ -41,6 +41,7 @@ fun DrawingCanvas(
     viewModel: AnimationViewModel,
     modifier: Modifier = Modifier
 ) {
+    val project by viewModel.currentProject.collectAsState()
     val currentFrameIndex by viewModel.currentFrameIndex.collectAsState()
     val frames by viewModel.frames.collectAsState()
     val layers by viewModel.layers.collectAsState()
@@ -103,8 +104,8 @@ fun DrawingCanvas(
                 // MANDATORY for BlendMode.Clear (Eraser) to avoid cutting black holes in the UI:
                 .graphicsLayer { alpha = 0.99f }
         ) {
-            // 1. Draw grid background to simulate an expert animation canvas (light grey checkers)
-            drawCheckerboard()
+            // 1. Draw custom background chosen in project settings
+            drawCustomBackground(project?.backgroundType ?: "White")
 
             if (currentFrameId == null) return@Canvas
 
@@ -185,6 +186,143 @@ private fun DrawScope.drawCheckerboard() {
                     size = androidx.compose.ui.geometry.Size(cellSize, cellSize)
                 )
             }
+        }
+    }
+}
+
+private fun DrawScope.drawCustomBackground(backgroundType: String) {
+    when (backgroundType) {
+        "White" -> {
+            drawRect(color = Color.White)
+        }
+        "Black" -> {
+            drawRect(color = Color(0xFF121212))
+        }
+        "Gray" -> {
+            drawRect(color = Color(0xFFD1D5DB))
+        }
+        "Cream" -> {
+            drawRect(color = Color(0xFFFDFBF7))
+        }
+        "Blue" -> {
+            drawRect(color = Color(0xFFE0F2FE))
+        }
+        "Green" -> {
+            drawRect(color = Color(0xFFDCFCE7))
+        }
+        "Pink" -> {
+            drawRect(color = Color(0xFFFCE7F3))
+        }
+        "None" -> {
+            drawRect(color = Color.White)
+            drawCheckerboard()
+        }
+        "Ruled" -> {
+            drawRect(color = Color(0xFFFDFBF7))
+            val lineSpacing = 40f
+            val linesCount = (size.height / lineSpacing).toInt()
+            for (i in 1..linesCount) {
+                drawLine(
+                    color = Color(0xFF93C5FD).copy(alpha = 0.6f),
+                    start = Offset(0f, i * lineSpacing),
+                    end = Offset(size.width, i * lineSpacing),
+                    strokeWidth = 1.5f
+                )
+            }
+            drawLine(
+                color = Color(0xFFFCA5A5).copy(alpha = 0.8f),
+                start = Offset(120f, 0f),
+                end = Offset(120f, size.height),
+                strokeWidth = 2f
+            )
+        }
+        "Grid" -> {
+            drawRect(color = Color(0xFFFBFBFC))
+            val spacing = 40f
+            val cols = (size.width / spacing).toInt() + 1
+            val rows = (size.height / spacing).toInt() + 1
+            for (i in 0 until cols) {
+                drawLine(
+                    color = Color(0xFFE5E7EB),
+                    start = Offset(i * spacing, 0f),
+                    end = Offset(i * spacing, size.height),
+                    strokeWidth = 1f
+                )
+            }
+            for (j in 0 until rows) {
+                drawLine(
+                    color = Color(0xFFE5E7EB),
+                    start = Offset(0f, j * spacing),
+                    end = Offset(size.width, j * spacing),
+                    strokeWidth = 1f
+                )
+            }
+        }
+        "Dotted" -> {
+            drawRect(color = Color(0xFFFAFAFA))
+            val spacing = 40f
+            val cols = (size.width / spacing).toInt() + 1
+            val rows = (size.height / spacing).toInt() + 1
+            for (i in 1 until cols) {
+                for (j in 1 until rows) {
+                    drawCircle(
+                        color = Color(0xFF9CA3AF).copy(alpha = 0.6f),
+                        radius = 2f,
+                        center = Offset(i * spacing, j * spacing)
+                    )
+                }
+            }
+        }
+        "Sketch" -> {
+            drawRect(color = Color(0xFFF3F4F6))
+            val spacing = 30f
+            val lineCount = ((size.width + size.height) / spacing).toInt()
+            for (i in 0 until lineCount) {
+                drawLine(
+                    color = Color(0xFFE5E7EB),
+                    start = Offset(i * spacing, 0f),
+                    end = Offset(0f, i * spacing),
+                    strokeWidth = 1f
+                )
+            }
+        }
+        "Kraft" -> {
+            drawRect(color = Color(0xFFD2B48C))
+            val spacing = 80f
+            val lineCount = ((size.width + size.height) / spacing).toInt()
+            for (i in 0 until lineCount) {
+                drawLine(
+                    color = Color(0xFFC4A484).copy(alpha = 0.4f),
+                    start = Offset(i * spacing, 0f),
+                    end = Offset(0f, i * spacing),
+                    strokeWidth = 1.5f
+                )
+            }
+        }
+        "Chalk" -> {
+            drawRect(color = Color(0xFF142F24))
+            val spacing = 80f
+            val cols = (size.width / spacing).toInt() + 1
+            val rows = (size.height / spacing).toInt() + 1
+            for (i in 0 until cols) {
+                drawLine(
+                    color = Color(0xFF22543D).copy(alpha = 0.3f),
+                    start = Offset(i * spacing, 0f),
+                    end = Offset(i * spacing, size.height),
+                    strokeWidth = 1.5f
+                )
+            }
+            for (j in 0 until rows) {
+                drawLine(
+                    color = Color(0xFF22543D).copy(alpha = 0.3f),
+                    start = Offset(0f, j * spacing),
+                    end = Offset(size.width, j * spacing),
+                    strokeWidth = 1.5f
+                )
+            }
+        }
+        else -> {
+            drawRect(color = Color.White)
         }
     }
 }

@@ -659,7 +659,7 @@ fun LayersPanel(
     onAddLayer: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var newLayerName by remember { mutableStateFlowOf("") }
+    var newLayerName by remember { mutableStateOf("") }
 
     Card(
         modifier = Modifier

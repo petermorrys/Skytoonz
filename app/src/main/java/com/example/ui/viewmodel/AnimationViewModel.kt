@@ -197,10 +197,10 @@ class AnimationViewModel(application: Application) : AndroidViewModel(applicatio
         _currentFrameIndex.value = 0
     }
 
-    fun createNewProject(name: String, fps: Int) {
+    fun createNewProject(name: String, fps: Int, width: Int = 1080, height: Int = 1080, backgroundType: String = "White") {
         viewModelScope.launch {
             val cleanName = if (name.isBlank()) "Untitled Animation" else name
-            val id = repository.createProject(cleanName, fps)
+            val id = repository.createProject(cleanName, fps, width, height, backgroundType)
             selectProject(id)
         }
     }

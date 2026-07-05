@@ -6,6 +6,7 @@ data class ProjectEntity(
     val fps: Int = 12,
     val width: Int = 1080,
     val height: Int = 1080,
+    val backgroundType: String = "White",
     val createdAt: Long = System.currentTimeMillis(),
     val isSynced: Boolean = false,
     val audioTrackName: String? = null,
