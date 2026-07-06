@@ -28,12 +28,19 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
     setContent {
-      MyApplicationTheme {
+      val viewModel: AnimationViewModel = viewModel()
+      val themePreference by viewModel.themePreference.collectAsState()
+      val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
+      val darkTheme = when (themePreference) {
+        "Light" -> false
+        "Dark" -> true
+        else -> systemDark
+      }
+      MyApplicationTheme(darkTheme = darkTheme) {
         Surface(
           modifier = Modifier.fillMaxSize(),
-          color = Color(0xFF0F172A) // Sleek slate dark background matches the theme
+          color = if (darkTheme) Color(0xFF0F172A) else Color(0xFFFDF8FD)
         ) {
-          val viewModel: AnimationViewModel = viewModel()
           val currentProjectId by viewModel.currentProjectId.collectAsState()
 
           AnimatedContent(

@@ -25,6 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import com.example.data.model.LayerEntity
 import com.example.ui.drawing.BrushType
 import com.example.ui.viewmodel.AnimationViewModel
@@ -49,6 +51,28 @@ fun EditorWorkspace(
 
     // Control Dialog/Drawer expansion
     var activePanel by remember { mutableStateOf<ActivePanel?>(null) }
+    var feedbackMessage by remember { mutableStateOf<String?>(null) }
+
+    val timelineListState = androidx.compose.foundation.lazy.rememberLazyListState()
+
+    // Auto scroll timeline to the active frame item during playback or selection!
+    LaunchedEffect(currentFrameIndex) {
+        if (frames.isNotEmpty()) {
+            try {
+                timelineListState.animateScrollToItem(currentFrameIndex)
+            } catch (e: Exception) {
+                // Safely catch any list scroll state errors
+            }
+        }
+    }
+
+    LaunchedEffect(feedbackMessage) {
+        if (feedbackMessage != null) {
+            kotlinx.coroutines.delay(1500)
+            feedbackMessage = null
+        }
+    }
+
     val scope = rememberCoroutineScope()
 
     // Sync state
@@ -156,76 +180,193 @@ fun EditorWorkspace(
                     modifier = Modifier.fillMaxSize()
                 )
 
-                // Quick Brush Controls Overlay on Left (Bento Styled)
+                // 1. Floating Horizontal Tools Bar (top-center)
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 12.dp)
+                        .background(Color.White.copy(alpha = 0.95f), RoundedCornerShape(16.dp))
+                        .border(1.dp, Color(0xFFCAC4D0).copy(alpha = 0.8f), RoundedCornerShape(16.dp))
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Drag Handle symbol
+                    AppIcon(
+                        icon = AppIconType.DRAG_INDICATOR,
+                        contentDescription = null,
+                        tint = Color.LightGray,
+                        modifier = Modifier.size(16.dp)
+                    )
+
+                    // Divider
+                    Box(modifier = Modifier.width(1.dp).height(20.dp).background(Color.LightGray))
+
+                    // Brush Button
+                    val isBrushSelected = brushConfig.type != BrushType.ERASER
+                    IconButton(
+                        onClick = {
+                            viewModel.updateBrushType(BrushType.PEN)
+                            feedbackMessage = "Brush tool active"
+                        },
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isBrushSelected) Color(0xFFFFE1EC) else Color.Transparent)
+                    ) {
+                        AppIcon(
+                            icon = AppIconType.BRUSH,
+                            contentDescription = "Brush Tool",
+                            tint = if (isBrushSelected) Color(0xFFE91E63) else Color(0xFF49454F),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    // Eraser Button
+                    val isEraserSelected = brushConfig.type == BrushType.ERASER
+                    IconButton(
+                        onClick = {
+                            viewModel.updateBrushType(BrushType.ERASER)
+                            feedbackMessage = "Eraser tool active"
+                        },
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isEraserSelected) Color(0xFFFFE1EC) else Color.Transparent)
+                    ) {
+                        AppIcon(
+                            icon = AppIconType.AUTO_FIX_NORMAL,
+                            contentDescription = "Eraser Tool",
+                            tint = if (isEraserSelected) Color(0xFFE91E63) else Color(0xFF49454F),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    // Lasso Button
+                    var isLassoSelected by remember { mutableStateOf(false) }
+                    IconButton(
+                        onClick = {
+                            isLassoSelected = !isLassoSelected
+                            feedbackMessage = if (isLassoSelected) "Lasso selection tool activated" else "Lasso deactivated"
+                        },
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isLassoSelected) Color(0xFFFFE1EC) else Color.Transparent)
+                    ) {
+                        AppIcon(
+                            icon = AppIconType.GESTURE,
+                            contentDescription = "Lasso Selection Tool",
+                            tint = if (isLassoSelected) Color(0xFFE91E63) else Color(0xFF49454F),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    // Paint Bucket Button
+                    var isBucketSelected by remember { mutableStateOf(false) }
+                    IconButton(
+                        onClick = {
+                            isBucketSelected = !isBucketSelected
+                            feedbackMessage = if (isBucketSelected) "Paint Bucket tool activated" else "Bucket deactivated"
+                        },
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isBucketSelected) Color(0xFFFFE1EC) else Color.Transparent)
+                    ) {
+                        AppIcon(
+                            icon = AppIconType.FORMAT_COLOR_FILL,
+                            contentDescription = "Paint Bucket Tool",
+                            tint = if (isBucketSelected) Color(0xFFE91E63) else Color(0xFF49454F),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    // Text Tool Button
+                    var isTextSelected by remember { mutableStateOf(false) }
+                    IconButton(
+                        onClick = {
+                            isTextSelected = !isTextSelected
+                            feedbackMessage = if (isTextSelected) "Text overlay tool activated" else "Text deactivated"
+                        },
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isTextSelected) Color(0xFFFFE1EC) else Color.Transparent)
+                    ) {
+                        AppIcon(
+                            icon = AppIconType.TITLE,
+                            contentDescription = "Text Tool",
+                            tint = if (isTextSelected) Color(0xFFE91E63) else Color(0xFF49454F),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+                // 2. Floating Vertical Tools Bar (middle-right)
                 Column(
                     modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(12.dp)
-                        .background(Color.White, RoundedCornerShape(16.dp))
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 12.dp)
+                        .background(Color.White.copy(alpha = 0.95f), RoundedCornerShape(16.dp))
                         .border(1.dp, Color(0xFFCAC4D0).copy(alpha = 0.8f), RoundedCornerShape(16.dp))
-                        .padding(8.dp),
-                    verticalArrangement = Arrangement.Center,
+                        .padding(horizontal = 6.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Brush Selector Trigger
+                    // Drag Handle
+                    AppIcon(
+                        icon = AppIconType.DRAG_INDICATOR,
+                        contentDescription = null,
+                        tint = Color.LightGray,
+                        modifier = Modifier.size(16.dp)
+                    )
+
+                    // Brush Settings/Size display/trigger
                     IconButton(
                         onClick = { activePanel = if (activePanel == ActivePanel.BRUSH) null else ActivePanel.BRUSH },
-                        modifier = Modifier.background(
-                            if (activePanel == ActivePanel.BRUSH) Color(0xFFEADDFF) else Color.Transparent,
-                            CircleShape
-                        )
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(if (activePanel == ActivePanel.BRUSH) Color(0xFFEADDFF) else Color.Transparent)
                     ) {
-                        val iconType = when (brushConfig.type) {
-                            BrushType.PEN -> AppIconType.BRUSH
-                            BrushType.PENCIL -> AppIconType.CREATE
-                            BrushType.BRUSH -> AppIconType.GESTURE
-                            BrushType.AIRBRUSH -> AppIconType.GRAIN
-                            BrushType.ERASER -> AppIconType.AUTO_FIX_NORMAL
-                        }
-                        val tint = if (activePanel == ActivePanel.BRUSH) Color(0xFF21005D) else Color(0xFF49454F)
-                        AppIcon(iconType, contentDescription = "Brush Type", tint = tint)
+                        Text(
+                            text = "${brushConfig.size.toInt()}px",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF49454F)
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Layers Trigger
-                    IconButton(
-                        onClick = { activePanel = if (activePanel == ActivePanel.LAYERS) null else ActivePanel.LAYERS },
-                        modifier = Modifier.background(
-                            if (activePanel == ActivePanel.LAYERS) Color(0xFFE8DEF8) else Color.Transparent,
-                            CircleShape
-                        )
-                    ) {
-                        val tint = if (activePanel == ActivePanel.LAYERS) Color(0xFF1D192B) else Color(0xFF49454F)
-                        AppIcon(AppIconType.LAYERS, contentDescription = "Layers Management", tint = tint)
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Audio track Trigger
-                    IconButton(
-                        onClick = { activePanel = if (activePanel == ActivePanel.AUDIO) null else ActivePanel.AUDIO },
-                        modifier = Modifier.background(
-                            if (project?.audioTrackName != null) Color(0xFFD0BCFF) else Color.Transparent,
-                            CircleShape
-                        )
-                    ) {
-                        val iconType = if (project?.audioTrackName != null) AppIconType.MUSIC_NOTE else AppIconType.MUSIC_VIDEO
-                        val tint = if (project?.audioTrackName != null) Color(0xFF21005D) else Color(0xFF49454F)
-                        AppIcon(iconType, contentDescription = "Audio track sync", tint = tint)
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Selected Swatch Color Circular Display
+                    // Active Color Swatch Display
                     Box(
                         modifier = Modifier
-                            .size(24.dp)
+                            .size(26.dp)
                             .clip(CircleShape)
                             .background(brushConfig.color)
                             .border(1.5.dp, Color(0xFFCAC4D0), CircleShape)
                             .clickable { activePanel = ActivePanel.BRUSH }
                     )
+
+                    // Ruler Tool Button
+                    val isRulerActive by viewModel.rulerEnabled.collectAsState()
+                    IconButton(
+                        onClick = {
+                            viewModel.setRulerEnabled(!isRulerActive)
+                            feedbackMessage = if (!isRulerActive) "Ruler guides active" else "Ruler deactivated"
+                        },
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isRulerActive) Color(0xFFE91E63) else Color.Transparent)
+                    ) {
+                        AppIcon(
+                            icon = AppIconType.RULER,
+                            contentDescription = "Ruler Guides",
+                            tint = if (isRulerActive) Color.White else Color(0xFF49454F),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
 
                 // Audio track playing indicator overlay at top right of canvas
@@ -249,130 +390,469 @@ fun EditorWorkspace(
                         )
                     }
                 }
+
+                // In-app Premium Toast Alert Overlay
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = feedbackMessage != null,
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp),
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .background(Color(0xFF2E2E38).copy(alpha = 0.9f), RoundedCornerShape(24.dp))
+                            .padding(horizontal = 20.dp, vertical = 10.dp)
+                    ) {
+                        Text(
+                            text = feedbackMessage ?: "",
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // --- BOTTOM TIMELINE & PLAYBACK AREA (Bento Styled Card) ---
+            // --- ACTIVE RULER BAR (Pops up above the timeline when ruler is enabled) ---
+            val rulerEnabled by viewModel.rulerEnabled.collectAsState()
+            val selectedRuler by viewModel.selectedRuler.collectAsState()
+            val rulerLocked by viewModel.rulerLocked.collectAsState()
+
+            androidx.compose.animation.AnimatedVisibility(
+                visible = rulerEnabled,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                        .background(Color(0xFF2E2E38), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Lock/Unlock Button
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (rulerLocked) Color(0xFFE91E63) else Color.White.copy(alpha = 0.15f))
+                            .clickable { viewModel.setRulerLocked(!rulerLocked) }
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        AppIcon(
+                            icon = if (rulerLocked) AppIconType.LOCK else AppIconType.LOCK_OPEN,
+                            contentDescription = "Lock Ruler",
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = if (rulerLocked) "LOCKED" else "UNLOCK",
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    // Ruler type selectors
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf(
+                            Triple("LINE", "LINE", AppIconType.LINE),
+                            Triple("CIRC", "CIRC", AppIconType.CIRCLE),
+                            Triple("BOX", "BOX", AppIconType.BOX),
+                            Triple("MIRR", "MIRR", AppIconType.MIRROR)
+                        ).forEach { (typeKey, labelText, iconType) ->
+                            val isSel = selectedRuler == typeKey
+                            Row(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSel) Color(0xFFFFE1EC) else Color.Transparent)
+                                    .border(
+                                        width = 1.dp,
+                                        color = if (isSel) Color(0xFFE91E63) else Color.White.copy(alpha = 0.2f),
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .clickable { viewModel.setSelectedRuler(typeKey) }
+                                    .padding(horizontal = 8.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                AppIcon(
+                                    icon = iconType,
+                                    contentDescription = labelText,
+                                    tint = if (isSel) Color(0xFFE91E63) else Color.White,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = labelText,
+                                    color = if (isSel) Color(0xFFE91E63) else Color.White,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    // Close ruler button
+                    IconButton(
+                        onClick = { viewModel.setRulerEnabled(false) },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        AppIcon(AppIconType.CLOSE, contentDescription = "Close Ruler", tint = Color.White, modifier = Modifier.size(16.dp))
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // --- BOTTOM TIMELINE CONTAINER (Floating Bento Card above bottom bar) ---
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(20.dp),
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFCAC4D0).copy(alpha = 0.8f))
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFCAC4D0).copy(alpha = 0.5f))
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp)
-                ) {
-                    // Playback Toolbar
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // --- Frame Quick Actions Bar ---
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
+                            .background(Color(0xFFF9F7FA))
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            IconButton(onClick = { viewModel.clearActiveFrameAndLayer() }) {
-                                AppIcon(AppIconType.DELETE, contentDescription = "Clear frame", tint = Color(0xFFEF4444))
-                            }
-                            IconButton(onClick = { viewModel.duplicateCurrentFrame() }) {
-                                AppIcon(AppIconType.CONTENT_COPY, contentDescription = "Duplicate Frame", tint = Color(0xFF1D1B20))
-                            }
-                        }
+                        Text(
+                            text = "Frame Actions (F${currentFrameIndex + 1}/${frames.size})",
+                            color = Color(0xFF6750A4),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
 
-                        // Main Controls: Prev, Play/Pause, Next
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            IconButton(onClick = { viewModel.prevFrame() }) {
-                                AppIcon(AppIconType.SKIP_PREVIOUS, contentDescription = "Prev Frame", tint = Color(0xFF1D1B20), modifier = Modifier.size(28.dp))
+                            // Move Left
+                            val canMoveLeft = currentFrameIndex > 0
+                            Row(
+                                modifier = Modifier
+                                    .clickable(enabled = canMoveLeft) {
+                                        viewModel.moveFrame(currentFrameIndex, currentFrameIndex - 1)
+                                        feedbackMessage = "Frame moved left!"
+                                    }
+                                    .padding(horizontal = 6.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                AppIcon(
+                                    icon = AppIconType.ARROW_LEFT,
+                                    contentDescription = "Move Left",
+                                    tint = if (canMoveLeft) Color(0xFFE91E63) else Color(0xFFCAC4D0),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(2.dp))
+                                Text(
+                                    text = "Left",
+                                    color = if (canMoveLeft) Color(0xFF1D1B20) else Color(0xFFCAC4D0),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
 
-                            FloatingActionButton(
-                                onClick = { viewModel.togglePlayback() },
-                                containerColor = Color(0xFF6750A4), // Bento primary purple
-                                contentColor = Color.White,
-                                shape = CircleShape,
+                            // Move Right
+                            val canMoveRight = currentFrameIndex < frames.size - 1
+                            Row(
                                 modifier = Modifier
-                                    .size(52.dp)
+                                    .clickable(enabled = canMoveRight) {
+                                        viewModel.moveFrame(currentFrameIndex, currentFrameIndex + 1)
+                                        feedbackMessage = "Frame moved right!"
+                                    }
+                                    .padding(horizontal = 6.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Right",
+                                    color = if (canMoveRight) Color(0xFF1D1B20) else Color(0xFFCAC4D0),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.width(2.dp))
+                                AppIcon(
+                                    icon = AppIconType.ARROW_RIGHT,
+                                    contentDescription = "Move Right",
+                                    tint = if (canMoveRight) Color(0xFFE91E63) else Color(0xFFCAC4D0),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+
+                            // Vertical Divider
+                            Box(modifier = Modifier.width(1.dp).height(12.dp).background(Color(0xFFCAC4D0).copy(alpha = 0.5f)))
+
+                            // Duplicate
+                            Row(
+                                modifier = Modifier
+                                    .clickable {
+                                        viewModel.duplicateCurrentFrame()
+                                        feedbackMessage = "Frame duplicated!"
+                                    }
+                                    .padding(horizontal = 6.dp, vertical = 4.dp)
+                                    .testTag("duplicate_frame_btn"),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                AppIcon(
+                                    icon = AppIconType.CONTENT_COPY,
+                                    contentDescription = "Duplicate Frame",
+                                    tint = Color(0xFFE91E63),
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Duplicate",
+                                    color = Color(0xFF1D1B20),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            // Vertical Divider
+                            Box(modifier = Modifier.width(1.dp).height(12.dp).background(Color(0xFFCAC4D0).copy(alpha = 0.5f)))
+
+                            // Delete
+                            val canDelete = frames.size > 1
+                            Row(
+                                modifier = Modifier
+                                    .clickable(enabled = canDelete) {
+                                        viewModel.deleteCurrentFrame()
+                                        feedbackMessage = "Frame deleted!"
+                                    }
+                                    .padding(horizontal = 6.dp, vertical = 4.dp)
+                                    .testTag("delete_frame_btn"),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                AppIcon(
+                                    icon = AppIconType.DELETE,
+                                    contentDescription = "Delete Frame",
+                                    tint = if (canDelete) Color(0xFFBA1A1A) else Color(0xFFCAC4D0),
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Delete",
+                                    color = if (canDelete) Color(0xFFBA1A1A) else Color(0xFFCAC4D0),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    HorizontalDivider(color = Color(0xFFCAC4D0).copy(alpha = 0.3f), thickness = 1.dp)
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Playback Controls (Left)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            IconButton(onClick = { viewModel.prevFrame() }, modifier = Modifier.size(32.dp)) {
+                                AppIcon(AppIconType.SKIP_PREVIOUS, contentDescription = "Prev Frame", tint = Color(0xFF1D1B20), modifier = Modifier.size(20.dp))
+                            }
+
+                            IconButton(
+                                onClick = { viewModel.togglePlayback() },
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFE91E63))
                                     .testTag("play_pause_fab")
                             ) {
                                 AppIcon(
                                     icon = if (isPlaying) AppIconType.PAUSE else AppIconType.PLAY_ARROW,
                                     contentDescription = if (isPlaying) "Pause" else "Play",
-                                    modifier = Modifier.size(28.dp)
+                                    tint = Color.White,
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
 
-                            IconButton(onClick = { viewModel.nextFrame() }) {
-                                AppIcon(AppIconType.SKIP_NEXT, contentDescription = "Next Frame", tint = Color(0xFF1D1B20), modifier = Modifier.size(28.dp))
+                            IconButton(onClick = { viewModel.nextFrame() }, modifier = Modifier.size(32.dp)) {
+                                AppIcon(AppIconType.SKIP_NEXT, contentDescription = "Next Frame", tint = Color(0xFF1D1B20), modifier = Modifier.size(20.dp))
                             }
                         }
 
-                        Button(
-                            onClick = { viewModel.addNewFrame() },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEADDFF), contentColor = Color(0xFF21005D)),
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                            modifier = Modifier.testTag("add_frame_btn")
-                        ) {
-                            AppIcon(AppIconType.ADD, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Add", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
+                        // Divider
+                        Box(modifier = Modifier.width(1.dp).height(36.dp).background(Color(0xFFCAC4D0).copy(alpha = 0.6f)))
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Timeline Scroller
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(68.dp)
-                            .padding(horizontal = 16.dp)
-                    ) {
-                        LazyRow(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        // Scrollable Timeline of Frames
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp)
+                                .padding(horizontal = 8.dp)
                         ) {
-                            itemsIndexed(frames) { index, frame ->
-                                val isSelected = index == currentFrameIndex
-                                Box(
-                                    modifier = Modifier
-                                        .size(width = 56.dp, height = 48.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(if (isSelected) Color(0xFF6750A4) else Color(0xFFF3EDF7))
-                                        .border(
-                                            width = if (isSelected) 2.dp else 1.dp,
-                                            color = if (isSelected) Color(0xFFD0BCFF) else Color(0xFFCAC4D0),
-                                            shape = RoundedCornerShape(8.dp)
-                                        )
-                                        .clickable { viewModel.selectFrameIndex(index) },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text(
-                                            text = "${index + 1}",
-                                            color = if (isSelected) Color.White else Color(0xFF1D1B20),
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 14.sp
-                                        )
-                                        Text(
-                                            text = "Frame",
-                                            color = if (isSelected) Color.White.copy(alpha = 0.8f) else Color(0xFF49454F).copy(alpha = 0.8f),
-                                            fontSize = 9.sp
-                                        )
+                            LazyRow(
+                                state = timelineListState,
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                itemsIndexed(frames) { index, frame ->
+                                    val isSelected = index == currentFrameIndex
+                                    Box(
+                                        modifier = Modifier
+                                            .size(width = 54.dp, height = 44.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(if (isSelected) Color.White else Color(0xFFF3EDF7))
+                                            .border(
+                                                width = if (isSelected) 2.5.dp else 1.dp,
+                                                color = if (isSelected) Color(0xFFE91E63) else Color(0xFFCAC4D0),
+                                                shape = RoundedCornerShape(8.dp)
+                                            )
+                                            .clickable { viewModel.selectFrameIndex(index) }
+                                    ) {
+                                        // Custom visual representation for frames with a tiny cute badge
+                                        Box(
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = "F${index + 1}",
+                                                color = if (isSelected) Color(0xFFE91E63) else Color(0xFF49454F),
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 12.sp
+                                            )
+
+                                            // Cute red badge with frame number
+                                            if (isSelected) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(14.dp)
+                                                        .clip(CircleShape)
+                                                        .background(Color.Red)
+                                                        .align(Alignment.TopEnd)
+                                                        .padding(2.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(
+                                                        text = "${index + 1}",
+                                                        color = Color.White,
+                                                        fontSize = 7.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
+
+                        // PLUS BUTTON for adding frame in dashed boundary
+                        Box(
+                            modifier = Modifier
+                                .size(width = 44.dp, height = 44.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.Transparent)
+                                .border(
+                                    width = 1.dp,
+                                    color = Color(0xFFE91E63).copy(alpha = 0.6f),
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .clickable { viewModel.addNewFrame() }
+                                .testTag("add_frame_btn"),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            AppIcon(AppIconType.ADD, contentDescription = "Add Frame", tint = Color(0xFFE91E63), modifier = Modifier.size(22.dp))
+                        }
                     }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // --- THE VERY BOTTOM ACTION CONTROLS BAR (Bento Styled Row) ---
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp)
+                    .background(Color.White, RoundedCornerShape(14.dp))
+                    .border(1.dp, Color(0xFFCAC4D0).copy(alpha = 0.4f), RoundedCornerShape(14.dp))
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Audio track sync
+                IconButton(onClick = { activePanel = if (activePanel == ActivePanel.AUDIO) null else ActivePanel.AUDIO }) {
+                    val hasAudio = project?.audioTrackName != null
+                    AppIcon(
+                        icon = AppIconType.MUSIC_NOTE,
+                        contentDescription = "Audio track sync",
+                        tint = if (hasAudio) Color(0xFF22C55E) else Color(0xFF49454F),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                // Undo
+                IconButton(onClick = { viewModel.undo() }) {
+                    AppIcon(AppIconType.UNDO, contentDescription = "Undo stroke", tint = Color(0xFF1D1B20), modifier = Modifier.size(24.dp))
+                }
+
+                // Redo
+                IconButton(onClick = { viewModel.redo() }) {
+                    AppIcon(AppIconType.REDO, contentDescription = "Redo stroke", tint = Color(0xFF1D1B20), modifier = Modifier.size(24.dp))
+                }
+
+                // Copy Paths
+                IconButton(onClick = {
+                    viewModel.copyCurrentFrameLayerPaths()
+                    feedbackMessage = "Layer strokes copied!"
+                }) {
+                    AppIcon(AppIconType.CONTENT_COPY, contentDescription = "Copy Layer", tint = Color(0xFF1D1B20), modifier = Modifier.size(24.dp))
+                }
+
+                // Paste Paths
+                IconButton(onClick = {
+                    viewModel.pasteFrameLayerPaths()
+                    feedbackMessage = "Layer strokes pasted!"
+                }) {
+                    AppIcon(AppIconType.CONTENT_PASTE, contentDescription = "Paste Layer", tint = Color(0xFF1D1B20), modifier = Modifier.size(24.dp))
+                }
+
+                // Layers Stack Info and selector
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (activePanel == ActivePanel.LAYERS) Color(0xFFEADDFF) else Color.Transparent)
+                        .clickable { activePanel = if (activePanel == ActivePanel.LAYERS) null else ActivePanel.LAYERS }
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AppIcon(
+                        icon = AppIconType.LAYERS,
+                        contentDescription = "Layers list",
+                        tint = Color(0xFF49454F),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "${layers.size}",
+                        color = Color(0xFF1D1B20),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
@@ -827,6 +1307,42 @@ fun SettingsPanel(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
+
+            // Theme selector
+            Text("App Theme Mode", color = Color(0xFF6750A4), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            Spacer(modifier = Modifier.height(8.dp))
+            val themePref by viewModel.themePreference.collectAsState()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf("System", "Light", "Dark").forEach { option ->
+                    val isSelected = themePref == option
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isSelected) Color(0xFFFFE1EC) else Color(0xFFFAFAFB))
+                            .border(
+                                width = if (isSelected) 1.5.dp else 1.dp,
+                                color = if (isSelected) Color(0xFFE91E63) else Color(0xFFE5E7EB),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .clickable { viewModel.setThemePreference(option) }
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = option,
+                            color = if (isSelected) Color(0xFFE91E63) else Color(0xFF4B5563),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            }
+
+            androidx.compose.material3.HorizontalDivider(color = Color(0xFFCAC4D0).copy(alpha = 0.5f), modifier = Modifier.padding(vertical = 12.dp))
 
             // Onion Skinning options
             Text("Onion skinning parameters", color = Color(0xFF6750A4), fontWeight = FontWeight.Bold, fontSize = 13.sp)

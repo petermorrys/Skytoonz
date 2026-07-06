@@ -33,6 +33,18 @@ Frame Animator is a highly polished, professional frame-by-frame vector animatio
 
 ### 3. "Art Animator" UI Upgrade & Custom Canvas Engine
 *   **The Upgrade**: Redesigned the main dashboard with a gorgeous, high-fidelity tabbed interface featuring **Projects** and **Clips** lists, an interactive floating navigation bar, and bento-styled cards.
+*   **Top Center Floating Brush Control Bar**: Quick selection of active drawing tools (Brushes, Eraser, Lasso, Paint Bucket, and Text Overlay tools) packed in an elegant semi-transparent floating horizontal glass bar with a drag handle symbol.
+*   **Center End Floating Vertical Controls**: Side-docked capsule containing quick active brush size text (px), active color swatch display with modal settings trigger, and ruler guide trigger buttons.
+*   **Bento-Styled Timeline & Controls**:
+    *   **Frame Timeline Aligned Above**: Smoothly scrolled horizontal LazyRow listing beautiful thumbnail frame badges displaying the frame index, active selected frame indicator, and a custom red circular notification badge showing active frames.
+    *   **Frame Add with Plus View**: Quick, high-contrast dashed-border button for instant frame creation directly adjacent to the timeline.
+    *   **Lower Action Bar**: Beautiful bento row carrying audio sync, undo/redo, copy/paste shortcuts, and active layers stack counts.
+*   **Active Ruler Guides (Line, Circle, Box, Mirror)**:
+    *   *Real-time snapping*: Automatically snaps drawing paths to lines, perfect circles, rectangles, or mirrors across a vertical axis.
+    *   *Interactive Guides*: Direct drag-and-drop support for shifting the origin center of circle/box guides, and live pinching/dragging to adjust sizing.
+    *   *Lock/Unlock Option*: High-contrast active bar below the canvas allowing creators to lock ruler positioning in place to focus entirely on tracing strokes.
+*   **Clipboard Copy-Paste Engine**: Integrated local clipboard buffers allowing users to copy complete vector path data from any layer/frame and paste them instantly across frames to fast-track repetitive frame edits.
+*   **Interactive Theme Settings**: Fully integrated settings panel enabling creators to switch between high-contrast light theme, eye-safe slate-dark theme, or follow system configuration.
 *   **Custom Background Engine**: Creators can now select from 14 background canvas textures and presets on project creation, including:
     *   *Solid colors*: White, Black, Gray, Cream, Blue, Green, Pink.
     *   *Interactive textures*: Ruled school paper, grid lines, dot grids, sketch patterns, brown Kraft cardboard, and blackboard Chalk green.

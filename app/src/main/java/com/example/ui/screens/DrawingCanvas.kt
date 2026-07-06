@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +55,16 @@ fun DrawingCanvas(
     val isPressureEnabled by viewModel.isPressureSensitivityEnabled.collectAsState()
     val pressureMultiplier by viewModel.stylusPressureMultiplier.collectAsState()
 
+    // Ruler states collected from ViewModel
+    val rulerEnabled by viewModel.rulerEnabled.collectAsState()
+    val selectedRuler by viewModel.selectedRuler.collectAsState()
+    val rulerLocked by viewModel.rulerLocked.collectAsState()
+    val rulerCenter by viewModel.rulerCenter.collectAsState()
+    val rulerRadius by viewModel.rulerRadius.collectAsState()
+
+    // Dragging state local to this canvas touch session
+    var rulerDragMode by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+
     val currentFrameId = viewModel.getCurrentFrameId()
 
     Box(
@@ -63,7 +74,7 @@ fun DrawingCanvas(
             .border(2.dp, Color.LightGray, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
-            .pointerInput(currentFrameId) {
+            .pointerInput(currentFrameId, rulerEnabled, selectedRuler, rulerLocked, rulerCenter, rulerRadius) {
                 if (currentFrameId == null) return@pointerInput
 
                 awaitPointerEventScope {
@@ -82,16 +93,57 @@ fun DrawingCanvas(
 
                         when (event.type) {
                             PointerEventType.Press -> {
-                                change.consume()
-                                viewModel.startDrawingPath(position.x, position.y, pressure)
+                                if (rulerEnabled && !rulerLocked && (selectedRuler == "CIRC" || selectedRuler == "BOX")) {
+                                    val cx = rulerCenter.x
+                                    val cy = rulerCenter.y
+                                    val r = rulerRadius
+                                    val distToCenter = Math.sqrt(((position.x - cx) * (position.x - cx) + (position.y - cy) * (position.y - cy)).toDouble()).toFloat()
+                                    
+                                    val rx = if (selectedRuler == "CIRC") cx + r else cx + r
+                                    val ry = if (selectedRuler == "CIRC") cy else cy + r
+                                    val distToResize = Math.sqrt(((position.x - rx) * (position.x - rx) + (position.y - ry) * (position.y - ry)).toDouble()).toFloat()
+
+                                    if (distToResize < 80f) {
+                                        rulerDragMode = "RESIZE"
+                                        change.consume()
+                                    } else if (distToCenter < 80f) {
+                                        rulerDragMode = "CENTER"
+                                        change.consume()
+                                    } else {
+                                        rulerDragMode = null
+                                        change.consume()
+                                        viewModel.startDrawingPath(position.x, position.y, pressure)
+                                    }
+                                } else {
+                                    rulerDragMode = null
+                                    change.consume()
+                                    viewModel.startDrawingPath(position.x, position.y, pressure)
+                                }
                             }
                             PointerEventType.Move -> {
                                 change.consume()
-                                viewModel.addPointToDrawingPath(position.x, position.y, pressure)
+                                if (rulerDragMode == "CENTER") {
+                                    viewModel.setRulerCenter(position.x, position.y)
+                                } else if (rulerDragMode == "RESIZE") {
+                                    val cx = rulerCenter.x
+                                    val cy = rulerCenter.y
+                                    val newR = if (selectedRuler == "CIRC") {
+                                        Math.sqrt(((position.x - cx) * (position.x - cx) + (position.y - cy) * (position.y - cy)).toDouble()).toFloat()
+                                    } else {
+                                        maxOf(Math.abs(position.x - cx), Math.abs(position.y - cy))
+                                    }
+                                    viewModel.setRulerRadius(newR)
+                                } else {
+                                    viewModel.addPointToDrawingPath(position.x, position.y, pressure)
+                                }
                             }
                             PointerEventType.Release -> {
                                 change.consume()
-                                viewModel.endDrawingPath()
+                                if (rulerDragMode != null) {
+                                    rulerDragMode = null
+                                } else {
+                                    viewModel.endDrawingPath()
+                                }
                             }
                         }
                     }
@@ -168,6 +220,120 @@ fun DrawingCanvas(
                     pressureEnabled = isPressureEnabled,
                     pressureMult = pressureMultiplier
                 )
+
+                if (rulerEnabled && selectedRuler == "MIRR") {
+                    val midX = size.width / 2f
+                    val mirroredLivePoints = currentDrawingPoints.map {
+                        val distToMid = midX - it.x
+                        CanvasPoint(midX + distToMid, it.y, it.pressure)
+                    }
+                    drawLivePoints(
+                        points = mirroredLivePoints,
+                        config = activePathEntity,
+                        brushConfigColor = brushConfig.color,
+                        pressureEnabled = isPressureEnabled,
+                        pressureMult = pressureMultiplier
+                    )
+                }
+            }
+
+            // 6. Draw RULER GUIDELINES Overlay
+            if (rulerEnabled) {
+                val cx = rulerCenter.x
+                val cy = rulerCenter.y
+                val r = rulerRadius
+                val guideColor = Color(0xFFFF4081) // Beautiful bright pink accent
+                val dashPattern = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(15f, 15f), 0f)
+
+                when (selectedRuler) {
+                    "LINE" -> {
+                        drawLine(
+                            color = guideColor.copy(alpha = 0.5f),
+                            start = Offset(0f, cy),
+                            end = Offset(size.width, cy),
+                            strokeWidth = 3f,
+                            pathEffect = dashPattern
+                        )
+                        drawLine(
+                            color = guideColor.copy(alpha = 0.5f),
+                            start = Offset(cx, 0f),
+                            end = Offset(cx, size.height),
+                            strokeWidth = 3f,
+                            pathEffect = dashPattern
+                        )
+                    }
+                    "CIRC" -> {
+                        drawCircle(
+                            color = guideColor.copy(alpha = 0.6f),
+                            radius = r,
+                            center = Offset(cx, cy),
+                            style = Stroke(width = 3f, pathEffect = dashPattern)
+                        )
+
+                        if (!rulerLocked) {
+                            // Center handle (Pink Square)
+                            drawRect(
+                                color = guideColor,
+                                topLeft = Offset(cx - 16f, cy - 16f),
+                                size = androidx.compose.ui.geometry.Size(32f, 32f)
+                            )
+                            // Resize handle (Pink Circle on perimeter)
+                            drawCircle(
+                                color = guideColor,
+                                radius = 20f,
+                                center = Offset(cx + r, cy)
+                            )
+                            drawCircle(
+                                color = Color.White,
+                                radius = 6f,
+                                center = Offset(cx + r, cy)
+                            )
+                        }
+                    }
+                    "BOX" -> {
+                        drawRect(
+                            color = guideColor.copy(alpha = 0.6f),
+                            topLeft = Offset(cx - r, cy - r),
+                            size = androidx.compose.ui.geometry.Size(2f * r, 2f * r),
+                            style = Stroke(width = 3f, pathEffect = dashPattern)
+                        )
+
+                        if (!rulerLocked) {
+                            // Center handle (Pink Square)
+                            drawRect(
+                                color = guideColor,
+                                topLeft = Offset(cx - 16f, cy - 16f),
+                                size = androidx.compose.ui.geometry.Size(32f, 32f)
+                            )
+                            // Resize handle (Pink Circle on bottom-right corner)
+                            drawCircle(
+                                color = guideColor,
+                                radius = 20f,
+                                center = Offset(cx + r, cy + r)
+                            )
+                            drawCircle(
+                                color = Color.White,
+                                radius = 6f,
+                                center = Offset(cx + r, cy + r)
+                            )
+                        }
+                    }
+                    "MIRR" -> {
+                        val midX = size.width / 2f
+                        drawLine(
+                            color = guideColor.copy(alpha = 0.7f),
+                            start = Offset(midX, 0f),
+                            end = Offset(midX, size.height),
+                            strokeWidth = 3f,
+                            pathEffect = dashPattern
+                        )
+                        drawCircle(
+                            color = guideColor,
+                            radius = 12f,
+                            center = Offset(midX, 24f)
+                        )
+                    }
+                }
             }
         }
     }

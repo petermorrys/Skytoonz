@@ -56,7 +56,20 @@ enum class AppIconType {
     GRAIN,
     AUTO_FIX_NORMAL,
     OUTLINED_DELETE,
-    LAYERS
+    LAYERS,
+    LOCK,
+    LOCK_OPEN,
+    CONTENT_PASTE,
+    RULER,
+    LINE,
+    CIRCLE,
+    BOX,
+    MIRROR,
+    DRAG_INDICATOR,
+    FORMAT_COLOR_FILL,
+    TITLE,
+    ARROW_LEFT,
+    ARROW_RIGHT
 }
 
 @Composable
@@ -75,6 +88,9 @@ fun AppIcon(
         AppIconType.PLAY_ARROW -> Icons.Default.PlayArrow
         AppIconType.SETTINGS -> Icons.Default.Settings
         AppIconType.SHARE -> Icons.Default.Share
+        AppIconType.LOCK -> Icons.Default.Lock
+        AppIconType.ARROW_LEFT -> Icons.Default.KeyboardArrowLeft
+        AppIconType.ARROW_RIGHT -> Icons.Default.KeyboardArrowRight
         else -> null
     }
 
@@ -432,6 +448,115 @@ fun AppIcon(
                             close()
                         }
                         drawPath(leadPath, color)
+                    }
+                    AppIconType.LOCK_OPEN -> {
+                        // Draw body
+                        drawRoundRect(
+                            color = color,
+                            topLeft = Offset(w * 0.25f, h * 0.45f),
+                            size = Size(w * 0.5f, h * 0.35f),
+                            cornerRadius = CornerRadius(w * 0.08f)
+                        )
+                        // Draw open shackle
+                        val shacklePath = Path().apply {
+                            moveTo(w * 0.35f, h * 0.45f)
+                            lineTo(w * 0.35f, h * 0.3f)
+                            arcTo(Rect(w * 0.35f, h * 0.15f, w * 0.65f, h * 0.45f), 180f, 180f, false)
+                            lineTo(w * 0.65f, h * 0.32f)
+                        }
+                        drawPath(shacklePath, color, style = Stroke(width = w * 0.08f, cap = StrokeCap.Round))
+                    }
+                    AppIconType.CONTENT_PASTE -> {
+                        // Draw clipboard backing board
+                        val boardPath = Path().apply {
+                            addRoundRect(RoundRect(w * 0.25f, h * 0.25f, w * 0.75f, h * 0.85f, CornerRadius(w * 0.08f)))
+                        }
+                        drawPath(boardPath, color, style = Stroke(width = w * 0.08f))
+                        // Draw paper clip header
+                        drawRect(
+                            color = color,
+                            topLeft = Offset(w * 0.4f, h * 0.18f),
+                            size = Size(w * 0.2f, h * 0.12f)
+                        )
+                        // Draw text lines
+                        drawLine(color, Offset(w * 0.35f, h * 0.45f), Offset(w * 0.65f, h * 0.45f), strokeWidth = w * 0.06f, cap = StrokeCap.Round)
+                        drawLine(color, Offset(w * 0.35f, h * 0.6f), Offset(w * 0.65f, h * 0.6f), strokeWidth = w * 0.06f, cap = StrokeCap.Round)
+                    }
+                    AppIconType.RULER -> {
+                        val rulerPath = Path().apply {
+                            moveTo(w * 0.15f, h * 0.35f)
+                            lineTo(w * 0.85f, h * 0.35f)
+                            lineTo(w * 0.85f, h * 0.65f)
+                            lineTo(w * 0.15f, h * 0.65f)
+                            close()
+                        }
+                        drawPath(rulerPath, color, style = Stroke(width = w * 0.08f))
+                        drawLine(color, Offset(w * 0.3f, h * 0.35f), Offset(w * 0.3f, h * 0.48f), strokeWidth = w * 0.06f)
+                        drawLine(color, Offset(w * 0.45f, h * 0.35f), Offset(w * 0.45f, h * 0.52f), strokeWidth = w * 0.06f)
+                        drawLine(color, Offset(w * 0.6f, h * 0.35f), Offset(w * 0.6f, h * 0.48f), strokeWidth = w * 0.06f)
+                        drawLine(color, Offset(w * 0.75f, h * 0.35f), Offset(w * 0.75f, h * 0.52f), strokeWidth = w * 0.06f)
+                    }
+                    AppIconType.LINE -> {
+                        drawLine(color, Offset(w * 0.2f, h * 0.8f), Offset(w * 0.8f, h * 0.2f), strokeWidth = w * 0.1f, cap = StrokeCap.Round)
+                    }
+                    AppIconType.CIRCLE -> {
+                        drawCircle(color, radius = w * 0.35f, center = Offset(w * 0.5f, h * 0.5f), style = Stroke(width = w * 0.08f))
+                    }
+                    AppIconType.BOX -> {
+                        drawRect(color, topLeft = Offset(w * 0.2f, h * 0.2f), size = Size(w * 0.6f, h * 0.6f), style = Stroke(width = w * 0.08f))
+                    }
+                    AppIconType.MIRROR -> {
+                        val dashPattern = PathEffect.dashPathEffect(floatArrayOf(w * 0.1f, w * 0.1f), 0f)
+                        drawLine(color, Offset(w * 0.5f, h * 0.15f), Offset(w * 0.5f, h * 0.85f), strokeWidth = w * 0.06f, pathEffect = dashPattern)
+                        val leftTri = Path().apply {
+                            moveTo(w * 0.35f, h * 0.35f)
+                            lineTo(w * 0.15f, h * 0.5f)
+                            lineTo(w * 0.35f, h * 0.65f)
+                            close()
+                        }
+                        drawPath(leftTri, color)
+                        val rightTri = Path().apply {
+                            moveTo(w * 0.65f, h * 0.35f)
+                            lineTo(w * 0.85f, h * 0.5f)
+                            lineTo(w * 0.65f, h * 0.65f)
+                            close()
+                        }
+                        drawPath(rightTri, color)
+                    }
+                    AppIconType.DRAG_INDICATOR -> {
+                        val r = w * 0.06f
+                        drawCircle(color, radius = r, center = Offset(w * 0.35f, h * 0.25f))
+                        drawCircle(color, radius = r, center = Offset(w * 0.65f, h * 0.25f))
+                        drawCircle(color, radius = r, center = Offset(w * 0.35f, h * 0.5f))
+                        drawCircle(color, radius = r, center = Offset(w * 0.65f, h * 0.5f))
+                        drawCircle(color, radius = r, center = Offset(w * 0.35f, h * 0.75f))
+                        drawCircle(color, radius = r, center = Offset(w * 0.65f, h * 0.75f))
+                    }
+                    AppIconType.FORMAT_COLOR_FILL -> {
+                        val bucket = Path().apply {
+                            moveTo(w * 0.3f, h * 0.35f)
+                            lineTo(w * 0.55f, h * 0.15f)
+                            lineTo(w * 0.85f, h * 0.45f)
+                            lineTo(w * 0.6f, h * 0.65f)
+                            close()
+                        }
+                        drawPath(bucket, color, style = Stroke(width = w * 0.08f, join = StrokeJoin.Round))
+                        val handle = Path().apply {
+                            moveTo(w * 0.3f, h * 0.35f)
+                            quadraticTo(w * 0.55f, h * 0.6f, w * 0.85f, h * 0.45f)
+                        }
+                        drawPath(handle, color, style = Stroke(width = w * 0.06f))
+                        val drip = Path().apply {
+                            moveTo(w * 0.58f, h * 0.65f)
+                            quadraticTo(w * 0.58f, h * 0.85f, w * 0.48f, h * 0.85f)
+                            quadraticTo(w * 0.38f, h * 0.85f, w * 0.38f, h * 0.75f)
+                            close()
+                        }
+                        drawPath(drip, color)
+                    }
+                    AppIconType.TITLE -> {
+                        drawLine(color, Offset(w * 0.2f, h * 0.25f), Offset(w * 0.8f, h * 0.25f), strokeWidth = w * 0.1f, cap = StrokeCap.Round)
+                        drawLine(color, Offset(w * 0.5f, h * 0.25f), Offset(w * 0.5f, h * 0.8f), strokeWidth = w * 0.1f, cap = StrokeCap.Round)
                     }
                     else -> {}
                 }

@@ -33,6 +33,56 @@ class AnimationViewModel(application: Application) : AndroidViewModel(applicatio
     private val repository: AnimationRepository
     val allProjects: StateFlow<List<ProjectEntity>>
 
+    // Theme Preference State: "System", "Light", "Dark"
+    private val sharedPrefs = application.getSharedPreferences("art_animator_prefs", android.content.Context.MODE_PRIVATE)
+    private val _themePreference = MutableStateFlow(sharedPrefs.getString("theme_mode", "System") ?: "System")
+    val themePreference: StateFlow<String> = _themePreference.asStateFlow()
+
+    fun setThemePreference(preference: String) {
+        sharedPrefs.edit().putString("theme_mode", preference).apply()
+        _themePreference.value = preference
+    }
+
+    // Ruler States
+    private val _rulerEnabled = MutableStateFlow(false)
+    val rulerEnabled = _rulerEnabled.asStateFlow()
+
+    private val _selectedRuler = MutableStateFlow("LINE") // "LINE", "CIRC", "BOX", "MIRR"
+    val selectedRuler = _selectedRuler.asStateFlow()
+
+    private val _rulerLocked = MutableStateFlow(false)
+    val rulerLocked = _rulerLocked.asStateFlow()
+
+    private val _rulerCenter = MutableStateFlow(CanvasPoint(540f, 540f, 1f))
+    val rulerCenter = _rulerCenter.asStateFlow()
+
+    private val _rulerRadius = MutableStateFlow(250f)
+    val rulerRadius = _rulerRadius.asStateFlow()
+
+    fun setRulerEnabled(enabled: Boolean) {
+        _rulerEnabled.value = enabled
+    }
+
+    fun setSelectedRuler(ruler: String) {
+        _selectedRuler.value = ruler
+    }
+
+    fun setRulerLocked(locked: Boolean) {
+        _rulerLocked.value = locked
+    }
+
+    fun setRulerCenter(x: Float, y: Float) {
+        if (!_rulerLocked.value) {
+            _rulerCenter.value = CanvasPoint(x, y, 1f)
+        }
+    }
+
+    fun setRulerRadius(r: Float) {
+        if (!_rulerLocked.value) {
+            _rulerRadius.value = r.coerceAtLeast(20f)
+        }
+    }
+
     // Active Project Selection
     private val _currentProjectId = MutableStateFlow<Long?>(null)
     val currentProjectId = _currentProjectId.asStateFlow()
@@ -357,6 +407,38 @@ class AnimationViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    // Clipboard for copying and pasting strokes
+    private var copiedPaths: List<DrawPathEntity> = emptyList()
+
+    fun copyCurrentFrameLayerPaths() {
+        val frameId = getCurrentFrameId() ?: return
+        val layerId = _selectedLayerId.value ?: return
+        val paths = pathsMap.value[frameId]?.filter { it.layerId == layerId } ?: emptyList()
+        copiedPaths = paths
+    }
+
+    fun pasteFrameLayerPaths() {
+        val frameId = getCurrentFrameId() ?: return
+        val layerId = _selectedLayerId.value ?: return
+        if (copiedPaths.isEmpty()) return
+
+        viewModelScope.launch {
+            copiedPaths.forEach { path ->
+                repository.insertDrawPath(
+                    DrawPathEntity(
+                        frameId = frameId,
+                        layerId = layerId,
+                        color = path.color,
+                        strokeWidth = path.strokeWidth,
+                        brushType = path.brushType,
+                        pointsData = path.pointsData
+                    )
+                )
+            }
+            refreshPaths()
+        }
+    }
+
     fun deleteCurrentFrame() {
         val framesList = _frames.value
         val currentIndex = _currentFrameIndex.value
@@ -426,15 +508,127 @@ class AnimationViewModel(application: Application) : AndroidViewModel(applicatio
     fun startDrawingPath(x: Float, y: Float, pressure: Float) {
         if (_isPlaying.value) return
         val actualPressure = if (_isPressureSensitivityEnabled.value) pressure else 1.0f
-        val startPoint = CanvasPoint(x, y, actualPressure)
-        _currentDrawingPoints.value = listOf(startPoint)
+
+        val finalPoint = if (_rulerEnabled.value) {
+            when (_selectedRuler.value) {
+                "CIRC" -> {
+                    val cx = _rulerCenter.value.x
+                    val cy = _rulerCenter.value.y
+                    val r = _rulerRadius.value
+                    val dx = x - cx
+                    val dy = y - cy
+                    val dist = Math.sqrt((dx * dx + dy * dy).toDouble()).toFloat()
+                    val snappedX = if (dist > 0) cx + dx * (r / dist) else cx + r
+                    val snappedY = if (dist > 0) cy + dy * (r / dist) else cy
+                    CanvasPoint(snappedX, snappedY, actualPressure)
+                }
+                "BOX" -> {
+                    val cx = _rulerCenter.value.x
+                    val cy = _rulerCenter.value.y
+                    val hw = _rulerRadius.value
+                    val clampedX = x.coerceIn(cx - hw, cx + hw)
+                    val clampedY = y.coerceIn(cy - hw, cy + hw)
+                    val distToLeft = Math.abs(x - (cx - hw))
+                    val distToRight = Math.abs(x - (cx + hw))
+                    val distToTop = Math.abs(y - (cy - hw))
+                    val distToBottom = Math.abs(y - (cy + hw))
+                    val minDist = listOf(distToLeft, distToRight, distToTop, distToBottom).minOrNull() ?: 0f
+                    val snappedX: Float
+                    val snappedY: Float
+                    when (minDist) {
+                        distToLeft -> {
+                            snappedX = cx - hw
+                            snappedY = clampedY
+                        }
+                        distToRight -> {
+                            snappedX = cx + hw
+                            snappedY = clampedY
+                        }
+                        distToTop -> {
+                            snappedX = clampedX
+                            snappedY = cy - hw
+                        }
+                        else -> {
+                            snappedX = clampedX
+                            snappedY = cy + hw
+                        }
+                    }
+                    CanvasPoint(snappedX, snappedY, actualPressure)
+                }
+                else -> CanvasPoint(x, y, actualPressure)
+            }
+        } else {
+            CanvasPoint(x, y, actualPressure)
+        }
+
+        _currentDrawingPoints.value = listOf(finalPoint)
     }
 
     fun addPointToDrawingPath(x: Float, y: Float, pressure: Float) {
         if (_isPlaying.value) return
         val actualPressure = if (_isPressureSensitivityEnabled.value) pressure else 1.0f
-        val newPoint = CanvasPoint(x, y, actualPressure)
-        _currentDrawingPoints.value = _currentDrawingPoints.value + newPoint
+
+        if (_rulerEnabled.value) {
+            when (_selectedRuler.value) {
+                "LINE" -> {
+                    val firstPoint = _currentDrawingPoints.value.firstOrNull() ?: CanvasPoint(x, y, actualPressure)
+                    _currentDrawingPoints.value = listOf(firstPoint, CanvasPoint(x, y, actualPressure))
+                }
+                "CIRC" -> {
+                    val cx = _rulerCenter.value.x
+                    val cy = _rulerCenter.value.y
+                    val r = _rulerRadius.value
+                    val dx = x - cx
+                    val dy = y - cy
+                    val dist = Math.sqrt((dx * dx + dy * dy).toDouble()).toFloat()
+                    val snappedX = if (dist > 0) cx + dx * (r / dist) else cx + r
+                    val snappedY = if (dist > 0) cy + dy * (r / dist) else cy
+                    val snappedPoint = CanvasPoint(snappedX, snappedY, actualPressure)
+                    _currentDrawingPoints.value = _currentDrawingPoints.value + snappedPoint
+                }
+                "BOX" -> {
+                    val cx = _rulerCenter.value.x
+                    val cy = _rulerCenter.value.y
+                    val hw = _rulerRadius.value
+                    val clampedX = x.coerceIn(cx - hw, cx + hw)
+                    val clampedY = y.coerceIn(cy - hw, cy + hw)
+                    val distToLeft = Math.abs(x - (cx - hw))
+                    val distToRight = Math.abs(x - (cx + hw))
+                    val distToTop = Math.abs(y - (cy - hw))
+                    val distToBottom = Math.abs(y - (cy + hw))
+                    val minDist = listOf(distToLeft, distToRight, distToTop, distToBottom).minOrNull() ?: 0f
+                    val snappedX: Float
+                    val snappedY: Float
+                    when (minDist) {
+                        distToLeft -> {
+                            snappedX = cx - hw
+                            snappedY = clampedY
+                        }
+                        distToRight -> {
+                            snappedX = cx + hw
+                            snappedY = clampedY
+                        }
+                        distToTop -> {
+                            snappedX = clampedX
+                            snappedY = cy - hw
+                        }
+                        else -> {
+                            snappedX = clampedX
+                            snappedY = cy + hw
+                        }
+                    }
+                    val snappedPoint = CanvasPoint(snappedX, snappedY, actualPressure)
+                    _currentDrawingPoints.value = _currentDrawingPoints.value + snappedPoint
+                }
+                "MIRR" -> {
+                    val newPoint = CanvasPoint(x, y, actualPressure)
+                    _currentDrawingPoints.value = _currentDrawingPoints.value + newPoint
+                }
+            }
+        } else {
+            val newPoint = CanvasPoint(x, y, actualPressure)
+            _currentDrawingPoints.value = _currentDrawingPoints.value + newPoint
+        }
     }
 
     fun endDrawingPath() {
@@ -460,7 +654,23 @@ class AnimationViewModel(application: Application) : AndroidViewModel(applicatio
             // Save to DB
             repository.insertDrawPath(pathEntity)
 
-            // Reset drawing points
+            // If MIRR is active, save a mirrored copy of the stroke as a separate path!
+            if (_rulerEnabled.value && _selectedRuler.value == "MIRR") {
+                val proj = _currentProject.value
+                val projectWidth = proj?.width ?: 1080
+                val mirroredPoints = points.map { CanvasPoint(projectWidth - it.x, it.y, it.pressure) }
+                val mirroredPointsStr = PathSerializer.serialize(mirroredPoints)
+                val mirroredPathEntity = pathEntity.copy(pointsData = mirroredPointsStr)
+                repository.insertDrawPath(mirroredPathEntity)
+            }
+
+            // Immediately load paths for the active frame to prevent flicker
+            val updatedActivePaths = repository.getPathsForFrame(frameId)
+            val newPathsMap = _pathsMap.value.toMutableMap()
+            newPathsMap[frameId] = updatedActivePaths
+            _pathsMap.value = newPathsMap
+
+            // Now safely reset live drawing points
             _currentDrawingPoints.value = emptyList()
 
             // Update state & clear redo
@@ -474,6 +684,12 @@ class AnimationViewModel(application: Application) : AndroidViewModel(applicatio
         val layerId = _selectedLayerId.value ?: return
         viewModelScope.launch {
             repository.deletePathsForFrameAndLayer(frameId, layerId)
+            
+            // Immediately clear locally to reflect change instantly
+            val newPathsMap = _pathsMap.value.toMutableMap()
+            newPathsMap[frameId] = emptyList()
+            _pathsMap.value = newPathsMap
+            
             refreshPaths()
         }
     }
@@ -488,6 +704,13 @@ class AnimationViewModel(application: Application) : AndroidViewModel(applicatio
                 val lastPath = paths.last()
                 repository.deleteDrawPathById(lastPath.id)
                 redoStack.add(lastPath)
+                
+                // Immediately refresh active frame locally to reflect change instantly
+                val updatedPaths = repository.getPathsForFrame(frameId)
+                val newPathsMap = _pathsMap.value.toMutableMap()
+                newPathsMap[frameId] = updatedPaths
+                _pathsMap.value = newPathsMap
+                
                 refreshPaths()
             }
         }
@@ -498,6 +721,14 @@ class AnimationViewModel(application: Application) : AndroidViewModel(applicatio
             val pathToRestore = redoStack.removeAt(redoStack.size - 1)
             viewModelScope.launch {
                 repository.insertDrawPath(pathToRestore)
+                val frameId = pathToRestore.frameId
+                
+                // Immediately refresh active frame locally to reflect change instantly
+                val updatedPaths = repository.getPathsForFrame(frameId)
+                val newPathsMap = _pathsMap.value.toMutableMap()
+                newPathsMap[frameId] = updatedPaths
+                _pathsMap.value = newPathsMap
+                
                 refreshPaths()
             }
         }
