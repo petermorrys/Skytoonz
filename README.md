@@ -1,4 +1,4 @@
-# Frame Animator 🎨🎬
+# Skytoonz 🎨🎬
 
 Frame Animator is a highly polished, professional frame-by-frame vector animation studio app built with Jetpack Compose and modern Material Design 3. It provides a complete sandbox for creators to sketch, organize, and export layered vector animations with synchronized audio tracks.
 
